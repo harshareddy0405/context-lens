@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Context Lens — an interactive, local-first RAG pipeline explorer."
+    />
+    <meta name="theme-color" content="#f3f0e9" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f2efe7'/%3E%3Ccircle cx='28' cy='27' r='16' fill='none' stroke='%23171815' stroke-width='4'/%3E%3Ccircle cx='28' cy='27' r='7' fill='%23f06a35'/%3E%3Cpath d='m40 40 13 13' stroke='%23171815' stroke-width='5'/%3E%3C/svg%3E"
+    />
+    <title>Context Lens — RAG Pipeline Explorer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="quality.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to explorer</a>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Context Lens home">
+        <span class="brand-symbol" aria-hidden="true"><i></i><i></i></span>
+        <span><strong>Context</strong> Lens</span>
+        <small>LAB 06</small>
+      </a>
+      <nav class="pipeline-nav" aria-label="Pipeline stages">
+        <button class="active" type="button" data-jump="source">
+          <span>01</span>Source
+        </button>
+        <i>→</i>
+        <button type="button" data-jump="chunks"><span>02</span>Chunks</button>
+        <i>→</i>
+        <button type="button" data-jump="retrieve">
+          <span>03</span>Retrieve
+        </button>
+        <i>→</i>
+        <button type="button" data-jump="context">
+          <span>04</span>Context
+        </button>
+      </nav>
+      <div class="top-actions">
+        <button
+          id="resetButton"
+          class="quiet-button"
+          type="button"
+          title="Reset workspace"
+        >
+          Reset
+        </button>
+        <button
+          id="themeButton"
+          class="icon-button"
+          type="button"
+          aria-label="Toggle color theme"
+        >
+          ◐
+        </button>
+        <button
+          id="infoButton"
+          class="icon-button"
+          type="button"
+          aria-label="About Context Lens"
+        >
+          ?
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="app-shell">
+      <aside class="source-panel" id="source">
+        <div class="panel-intro">
+          <p class="kicker"><span></span>Corpus</p>
+          <div class="title-row">
+            <h1>Source library</h1>
+            <button
+              id="addDocumentButton"
+              class="add-button"
+              type="button"
+              aria-label="Add document"
+            >
+              ＋
+            </button>
+          </div>
+          <p>
+            Select local demo material, tune its segmentation, then ask a
+            question.
+          </p>
+        </div>
+
+        <div
+          id="documentList"
+          class="document-list"
+          role="list"
+          aria-label="Documents"
+        ></div>
+
+        <section class="control-section" aria-labelledby="chunkSettingsTitle">
+          <div class="section-label">
+            <span>Chunking</span
+            ><button
+              class="tiny-button"
+              id="defaultControlsButton"
+              type="button"
+            >
+              Defaults
+            </button>
+          </div>
+          <h2 id="chunkSettingsTitle">Segmentation controls</h2>
+          <label class="range-control" for="chunkSize">
+            <span
+              >Target size <output id="chunkSizeValue">52 words</output></span
+            >
+            <input
+              id="chunkSize"
+              type="range"
+              min="28"
+              max="100"
+              step="4"
+              value="52"
+            />
+            <small><i>28</i><i>100</i></small>
+          </label>
+          <label class="range-control" for="chunkOverlap">
+            <span>Overlap <output id="overlapValue">12 words</output></span>
+            <input
+              id="chunkOverlap"
+              type="range"
+              min="0"
+              max="28"
+              step="2"
+              value="12"
+            />
+            <small><i>0</i><i>28</i></small>
+          </label>
+          <label class="select-control"
+            >Split strategy
+            <select id="splitStrategy">
+              <option value="semantic">Sentence aware</option>
+              <option value="fixed">Fixed window</option>
+              <option value="paragraph">Paragraph first</option>
+            </select>
+          </label>
+        </section>
+
+        <section
+          class="control-section retrieval-controls"
+          aria-labelledby="retrievalTitle"
+        >
+          <div class="section-label">
+            <span>Retrieval</span><span class="simulation-chip">simulated</span>
+          </div>
+          <h2 id="retrievalTitle">Search policy</h2>
+          <label class="range-control" for="topK">
+            <span>Top K <output id="topKValue">3 chunks</output></span>
+            <input id="topK" type="range" min="1" max="6" step="1" value="3" />
+            <small><i>1</i><i>6</i></small>
+          </label>
+          <label class="select-control"
+            >Score model
+            <select id="scoreModel">
+              <option value="hybrid">Hybrid lexical</option>
+              <option value="keyword">Keyword overlap</option>
+              <option value="coverage">Query coverage</option>
+            </select>
+          </label>
+        </section>
+
+        <div class="local-first">
+          <span>⌂</span>
+          <div>
+            <strong>Browser-only lab</strong>
+            <p>Your documents never leave this device.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="explorer">
+        <section class="query-studio" id="retrieve">
+          <div class="query-heading">
+            <div>
+              <p class="kicker"><span></span>Query simulator</p>
+              <h2>What do you want to retrieve?</h2>
+            </div>
+            <div
+              class="run-history"
+              id="runHistory"
+              aria-label="Query run count"
+            >
+              RUN 00
+            </div>
+          </div>
+          <form id="queryForm" class="query-form">
+            <span class="search-glyph" aria-hidden="true">⌕</span>
+            <label class="sr-only" for="queryInput">Retrieval query</label>
+            <input
+              id="queryInput"
+              autocomplete="off"
+              placeholder="Ask about the selected document…"
+              value="Why do users trust the product during high-pressure incidents?"
+            />
+            <button id="exampleButton" type="button" class="example-button">
+              Try example
+            </button>
+            <button class="run-query-button" type="submit">
+              <span>Run retrieval</span><kbd>⌘ ↵</kbd>
+            </button>
+          </form>
+          <p class="query-error" id="queryError" role="alert"></p>
+        </section>
+
+        <section class="diagnostic-strip" aria-label="Pipeline diagnostics">
+          <article>
+            <span>Document</span><strong id="diagDocument">—</strong
+            ><small id="diagDocWords">0 words</small>
+          </article>
+          <i>→</i>
+          <article>
+            <span>Chunk pass</span><strong id="diagChunks">0 units</strong
+            ><small id="diagStrategy">sentence aware</small>
+          </article>
+          <i>→</i>
+          <article>
+            <span>Retriever</span><strong id="diagMatches">Not run</strong
+            ><small id="diagModel">hybrid lexical</small>
+          </article>
+          <i>→</i>
+          <article class="accent">
+            <span>Context yield</span><strong id="diagYield">0 tokens</strong
+            ><small id="diagYieldRate">0% of budget</small>
+          </article>
+        </section>
+
+        <div class="view-header" id="chunks">
+          <div>
+            <p class="kicker"><span></span>Segmentation map</p>
+            <h2>Document anatomy</h2>
+            <p>
+              Each block is inspectable. Retrieved blocks rise to the top after
+              a query.
+            </p>
+          </div>
+          <div class="view-controls">
+            <button class="legend-button" type="button">
+              <i class="high"></i> high relevance
+            </button>
+            <button class="legend-button" type="button">
+              <i class="low"></i> low relevance
+            </button>
+            <div class="segmented" role="group" aria-label="Chunk display mode">
+              <button
+                class="active"
+                type="button"
+                data-view="cards"
+                aria-pressed="true"
+              >
+                Cards
+              </button>
+              <button type="button" data-view="map" aria-pressed="false">
+                Map
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <section class="chunk-workspace">
+          <div id="chunkGrid" class="chunk-grid" aria-live="polite"></div>
+          <aside
+            class="inspector"
+            id="chunkInspector"
+            aria-label="Chunk inspector"
+          >
+            <div class="inspector-empty">
+              <span>⌖</span>
+              <h3>Inspect a chunk</h3>
+              <p>
+                Select any block to see its boundaries, retrieval score,
+                matching terms, and context status.
+              </p>
+            </div>
+          </aside>
+        </section>
+
+        <section class="context-section" id="context">
+          <div class="context-header">
+            <div>
+              <p class="kicker"><span></span>Assembled prompt</p>
+              <h2>Context window</h2>
+              <p>Only the top-ranked chunks are composed below.</p>
+            </div>
+            <div class="budget-meter" aria-label="Context budget">
+              <div>
+                <span>Estimated budget</span
+                ><strong id="budgetLabel">0 / 1,200 tokens</strong>
+              </div>
+              <div class="budget-track"><i id="budgetBar"></i></div>
+            </div>
+          </div>
+          <div class="context-composer">
+            <header>
+              <span>system/context</span>
+              <div>
+                <button id="copyContextButton" type="button">Copy</button
+                ><button id="exportContextButton" type="button">Export</button>
+              </div>
+            </header>
+            <div id="contextOutput" class="context-output">
+              <div class="context-empty">
+                <span>↳</span>
+                <h3>Run a retrieval to assemble context</h3>
+                <p>
+                  The highest-scoring chunks will appear here with their source
+                  positions and synthetic relevance scores.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="lab-footer">
+          <span>CONTEXT LENS / LOCAL RESEARCH PROTOTYPE</span
+          ><span>NO EMBEDDINGS · NO MODEL CALLS · NO NETWORK</span>
+        </footer>
+      </section>
+    </main>
+
+    <dialog id="documentDialog" class="modal">
+      <form id="documentForm">
+        <div class="modal-top">
+          <div>
+            <p class="kicker"><span></span>Local input</p>
+            <h2>Add a document</h2>
+          </div>
+          <button
+            type="button"
+            class="icon-button close-document"
+            aria-label="Close dialog"
+          >
+            ×
+          </button>
+        </div>
+        <label
+          >Document title<input
+            id="documentTitle"
+            maxlength="56"
+            required
+            placeholder="e.g. Research synthesis"
+        /></label>
+        <label
+          >Plain text<textarea
+            id="documentText"
+            required
+            minlength="80"
+            maxlength="12000"
+            placeholder="Paste at least 80 characters of source material…"
+          ></textarea
+          ><small
+            ><span id="characterCount">0</span> / 12,000 characters</small
+          ></label
+        >
+        <p class="modal-note">
+          Content stays in this browser and can be removed at any time.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="quiet-button close-document">
+            Cancel</button
+          ><button class="primary-button" type="submit">Add to corpus</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="infoDialog" class="modal info-modal">
+      <button
+        type="button"
+        class="icon-button close-info"
+        aria-label="Close dialog"
+      >
+        ×
+      </button>
+      <div class="lens-art"><i></i></div>
+      <p class="kicker"><span></span>About the lab</p>
+      <h2>See exactly what retrieval keeps—and what it leaves behind.</h2>
+      <p>
+        Context Lens is a browser-only teaching prototype. Its scoring is
+        deterministic and lexical, so every result can be inspected. It does not
+        generate embeddings, call an LLM, or claim semantic equivalence.
+      </p>
+      <button type="button" class="primary-button close-info">
+        Enter the lab
+      </button>
+    </dialog>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+    <script src="storage.js"></script>
+    <script src="schema.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
