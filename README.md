@@ -19,6 +19,8 @@
 > [!NOTE]
 > Context Lens is a deterministic teaching **simulation**. It uses explainable lexical scoring—not embeddings, vector search, an LLM, or a remote API. Scores are useful for comparison inside the lab, not as claims of semantic similarity.
 
+[Open the live studio ↗](https://harshareddy0405.github.io/context-lens/) · [Engineering notes](docs/ENGINEERING.md) · [Quality checks](https://github.com/harshareddy0405/context-lens/actions)
+
 ## The problem
 
 “The model missed it” often starts earlier in the pipeline. Relevant text may be cut across chunk boundaries, outranked by repeated vocabulary, or dropped while assembling a limited context window. Those decisions tend to disappear behind a vector database call.
